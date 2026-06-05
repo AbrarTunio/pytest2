@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Python Quiz – CodePro</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #161b24;
+    --card: #1e2535;
+    --border: #2a3347;
+    --accent: #4ade80;
+    --accent2: #38bdf8;
+    --warn: #fb923c;
+    --err: #f87171;
+    --text: #e2e8f0;
+    --muted: #7c8fa6;
+    --keyword: #c084fc;
+    --string: #86efac;
+    --number: #fbbf24;
+    --comment: #4b5563;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Sora', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 2rem 1rem 4rem;
+  }
+
+  /* ── HEADER ── */
+  header {
+    width: 100%;
+    max-width: 760px;
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    margin-bottom: 2.5rem;
+  }
+  .logo {
+    width: 36px; height: 36px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: grid; place-items: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: .85rem;
+    color: #0d0f14;
+    flex-shrink: 0;
+  }
+  header h1 { font-size: 1rem; font-weight: 600; color: var(--muted); letter-spacing: .05em; }
+  header h1 span { color: var(--text); }
+
+  /* ── SCREEN BASE ── */
+  .screen {
+    width: 100%;
+    max-width: 760px;
+    display: none;
+    animation: fadeUp .35s ease both;
+  }
+  .screen.active { display: block; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── LANDING ── */
+  #screen-landing {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1.5rem;
+    padding: 3rem 2rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+  }
+  #screen-landing .emoji { font-size: 3.5rem; }
+  #screen-landing h2 { font-size: 2rem; font-weight: 800; }
+  #screen-landing h2 span { color: var(--accent); }
+  #screen-landing p { color: var(--muted); max-width: 440px; line-height: 1.7; }
+  .badges { display: flex; gap: .5rem; flex-wrap: wrap; justify-content: center; }
+  .badge {
+    padding: .3rem .75rem;
+    border-radius: 99px;
+    font-size: .72rem;
+    font-weight: 600;
+    letter-spacing: .04em;
+    background: rgba(74,222,128,.1);
+    color: var(--accent);
+    border: 1px solid rgba(74,222,128,.25);
+  }
+  .badge.blue { background: rgba(56,189,248,.1); color: var(--accent2); border-color: rgba(56,189,248,.25); }
+  .badge.orange { background: rgba(251,146,60,.1); color: var(--warn); border-color: rgba(251,146,60,.25); }
+  #name-input {
+    width: 100%; max-width: 340px;
+    padding: .85rem 1.2rem;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    background: var(--card);
+    color: var(--text);
+    font-family: 'Sora', sans-serif;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color .2s;
+  }
+  #name-input:focus { border-color: var(--accent); }
+  #name-input::placeholder { color: var(--muted); }
+  .btn {
+    padding: .8rem 2.2rem;
+    border-radius: 10px;
+    border: none;
+    font-family: 'Sora', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform .15s, opacity .15s;
+  }
+  .btn:active { transform: scale(.97); }
+  .btn-primary { background: var(--accent); color: #0d0f14; }
+  .btn-primary:hover { opacity: .9; }
+  .btn-outline { background: transparent; color: var(--accent); border: 1.5px solid var(--accent); }
+  .name-err { color: var(--err); font-size: .82rem; display: none; }
+
+  /* ── QUIZ HEADER ── */
+  #quiz-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+    gap: .75rem;
+  }
+  .q-counter { font-size: .85rem; color: var(--muted); }
+  .q-counter span { color: var(--text); font-weight: 700; }
+  .progress-wrap { width: 100%; height: 5px; background: var(--border); border-radius: 99px; margin-bottom: 1.5rem; overflow: hidden; }
+  .progress-bar { height: 100%; background: var(--accent); border-radius: 99px; transition: width .4s ease; }
+  .score-live { font-size: .82rem; color: var(--muted); }
+  .score-live span { color: var(--accent); font-weight: 700; }
+
+  /* ── QUESTION CARD ── */
+  .q-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.75rem;
+    margin-bottom: 1.25rem;
+  }
+  .q-label {
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: .75rem;
+  }
+  .q-title { font-size: 1rem; font-weight: 600; margin-bottom: 1.25rem; line-height: 1.6; }
+  .code-block {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .85rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.1rem 1.25rem;
+    line-height: 1.9;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .code-block .kw   { color: var(--keyword); font-weight: 700; }
+  .code-block .str  { color: var(--string); }
+  .code-block .num  { color: var(--number); }
+  .code-block .cmt  { color: var(--comment); font-style: italic; }
+  .code-block .fn   { color: var(--accent2); }
+  .blank-input {
+    display: inline-block;
+    min-width: 100px;
+    padding: .15rem .55rem;
+    border-radius: 6px;
+    border: 1.5px solid var(--accent);
+    background: rgba(74,222,128,.06);
+    color: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .85rem;
+    outline: none;
+    transition: border-color .2s, background .2s;
+    vertical-align: middle;
+  }
+  .blank-input:focus { border-color: var(--accent2); background: rgba(56,189,248,.08); color: var(--accent2); }
+  .blank-input.correct { border-color: var(--accent); background: rgba(74,222,128,.15); color: var(--accent); }
+  .blank-input.wrong   { border-color: var(--err); background: rgba(248,113,113,.12); color: var(--err); }
+
+  .q-actions { display: flex; gap: .75rem; margin-top: 1.25rem; }
+  .hint-text { font-size: .8rem; color: var(--warn); margin-top: .75rem; display: none; }
+  .feedback { font-size: .85rem; margin-top: .75rem; display: none; line-height: 1.6; }
+  .feedback.ok  { color: var(--accent); }
+  .feedback.bad { color: var(--err); }
+
+  /* ── RESULT ── */
+  #screen-result { text-align: center; }
+  .result-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2.5rem 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.25rem;
+  }
+  .result-emoji { font-size: 4rem; }
+  .result-card h2 { font-size: 1.8rem; font-weight: 800; }
+  .result-card h2 span { color: var(--accent); }
+  .score-big {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 3.5rem;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .score-big sub { font-size: 1.4rem; color: var(--muted); font-weight: 400; }
+  .result-msg { color: var(--muted); max-width: 380px; line-height: 1.7; }
+  .result-actions { display: flex; gap: .75rem; flex-wrap: wrap; justify-content: center; margin-top: .5rem; }
+  .breakdown { width: 100%; text-align: left; margin-top: .5rem; }
+  .breakdown h3 { font-size: .85rem; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: .75rem; }
+  .bk-item {
+    display: flex;
+    align-items: flex-start;
+    gap: .75rem;
+    padding: .65rem 0;
+    border-bottom: 1px solid var(--border);
+    font-size: .83rem;
+    line-height: 1.5;
+  }
+  .bk-item:last-child { border-bottom: none; }
+  .bk-num { color: var(--muted); min-width: 24px; font-family: 'JetBrains Mono', monospace; }
+  .bk-icon { min-width: 18px; font-size: 1rem; }
+  .bk-answer { color: var(--muted); font-family: 'JetBrains Mono', monospace; font-size: .8rem; }
+  .bk-correct { color: var(--accent); }
+
+  @media(max-width:500px){
+    .q-card { padding: 1.25rem; }
+    .code-block { font-size: .78rem; }
+    .blank-input { min-width: 70px; }
+    #screen-landing h2 { font-size: 1.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">&gt;_</div>
+  <h1>CodePro <span>Python Quiz</span></h1>
+</header>
+
+<!-- ── LANDING ── -->
+<div id="screen-landing" class="screen active">
+  <div class="emoji">🐍</div>
+  <h2>Python <span>Basics</span> Quiz</h2>
+  <p>Test your knowledge of Lists, For Loops, and If-Else statements. Fill in the blanks to complete the Python code!</p>
+  <div class="badges">
+    <span class="badge">📋 Lists</span>
+    <span class="badge blue">🔁 For Loops</span>
+    <span class="badge orange">🔀 If / Else</span>
+  </div>
+  <input id="name-input" type="text" placeholder="Enter your name to begin..." maxlength="40" autocomplete="off">
+  <span class="name-err" id="name-err">⚠ Please enter your name first.</span>
+  <button class="btn btn-primary" onclick="startQuiz()">▶ Start Quiz</button>
+</div>
+
+<!-- ── QUIZ ── -->
+<div id="screen-quiz" class="screen">
+  <div id="quiz-top">
+    <span class="q-counter">Question <span id="q-num">1</span> of <span id="q-total">20</span></span>
+    <span class="score-live">Score: <span id="score-live">0</span></span>
+  </div>
+  <div class="progress-wrap"><div class="progress-bar" id="progress-bar"></div></div>
+  <div id="q-container"></div>
+</div>
+
+<!-- ── RESULT ── -->
+<div id="screen-result" class="screen">
+  <div class="result-card">
+    <div class="result-emoji" id="res-emoji">🎉</div>
+    <h2>Well Done, <span id="res-name"></span>!</h2>
+    <div class="score-big" id="res-score">0<sub>/20</sub></div>
+    <p class="result-msg" id="res-msg"></p>
+    <div class="result-actions">
+      <button class="btn btn-primary" onclick="retryQuiz()">🔄 Try Again</button>
+    </div>
+    <div class="breakdown" id="breakdown">
+      <h3>📊 Question Breakdown</h3>
+      <div id="bk-list"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ──────────────────────────────────────────────
+//  QUESTIONS  (20 fill-in-the-blank)
+// ──────────────────────────────────────────────
+const QUESTIONS = [
+  // ── LIST BASICS ──
+  {
+    topic: "List Basics",
+    title: "Create a list called <code>Friends</code> with three names.",
+    template: `Friends = [___, "Karen", "Jim"]
+print(Friends)`,
+    blanks: [{ ph: 'first item', size: 9 }],
+    answers: ['"Kevin"'],
+    hint: 'The first friend in the original list was Kevin.',
+  },
+  {
+    topic: "List Indexing",
+    title: "Access the item at index <strong>2</strong> from the list.",
+    template: `Friends = ["Kevin", "Karen", "Jim", True, 26.5]
+print( Friends[___] )`,
+    blanks: [{ ph: 'index', size: 5 }],
+    answers: ['2'],
+    hint: 'Python index starts at 0. The 3rd item is at index 2.',
+  },
+  {
+    topic: "List Indexing",
+    title: "Print the <strong>4th</strong> item in the list (index 3).",
+    template: `Friends = ["Kevin", "Karen", "Jim", True, 26.5]
+print( Friends[___] )`,
+    blanks: [{ ph: 'index', size: 5 }],
+    answers: ['3'],
+    hint: 'The 4th item has index 3.',
+  },
+  {
+    topic: "List Slicing",
+    title: "Print all items from index 0 to the end using slicing.",
+    template: `Friends = ["Kevin", "Karen", "Jim"]
+print( Friends[___:] )`,
+    blanks: [{ ph: 'start', size: 5 }],
+    answers: ['0'],
+    hint: 'To start from the beginning, use index 0.',
+  },
+  {
+    topic: "List Slicing",
+    title: "Get the first three items using slicing.",
+    template: `Friends = ["Kevin", "Karen", "Jim", True, 26.5]
+print( Friends[0:___] )`,
+    blanks: [{ ph: 'end', size: 5 }],
+    answers: ['3'],
+    hint: 'Slicing end index is exclusive. To get 3 items starting at 0, end at 3.',
+  },
+  // ── LIST METHODS ──
+  {
+    topic: "append()",
+    title: "Add <strong>\"Athar\"</strong> to the end of the list.",
+    template: `Friends = ["Kevin", "Karen", "Jim"]
+Friends.___(\"Athar\")
+print(Friends)`,
+    blanks: [{ ph: 'method', size: 8 }],
+    answers: ['append'],
+    hint: 'This method adds an item to the END of the list.',
+  },
+  {
+    topic: "insert()",
+    title: "Insert <strong>\"Shoaib\"</strong> at index <strong>1</strong>.",
+    template: `Friends = ["Kevin", "Karen", "Jim"]
+Friends.___(1, \"Shoaib\")
+print(Friends)`,
+    blanks: [{ ph: 'method', size: 8 }],
+    answers: ['insert'],
+    hint: 'This method inserts an item at a specific position.',
+  },
+  {
+    topic: "insert()",
+    title: "Complete the insert call – add <strong>\"Bilal\"</strong> at position <strong>2</strong>.",
+    template: `Friends = ["Kevin", "Karen", "Jim"]
+Friends.insert(___, \"Bilal\")
+print(Friends)`,
+    blanks: [{ ph: 'index', size: 5 }],
+    answers: ['2'],
+    hint: 'We want to place Bilal at position 2.',
+  },
+  {
+    topic: "remove()",
+    title: "Remove <strong>\"Jim\"</strong> from the list.",
+    template: `Friends = ["Kevin", "Karen", "Jim"]
+Friends.___("Jim")
+print(Friends)`,
+    blanks: [{ ph: 'method', size: 8 }],
+    answers: ['remove'],
+    hint: 'This method removes an item by its VALUE.',
+  },
+  {
+    topic: "List Methods Mix",
+    title: "Use <code>append</code> to add <strong>9</strong> to the list.",
+    template: `numbers = [1, 2, 3]
+numbers.append(___)
+print(numbers)`,
+    blanks: [{ ph: 'value', size: 5 }],
+    answers: ['9'],
+    hint: 'Append the number 9.',
+  },
+  // ── FOR LOOP ──
+  {
+    topic: "For Loop",
+    title: "Complete the for loop to iterate over the <code>names</code> list.",
+    template: `names = ["Ali", "Ahmed", "Hassan"]
+___ x in names:
+    print(x)`,
+    blanks: [{ ph: 'keyword', size: 5 }],
+    answers: ['for'],
+    hint: 'The keyword used to start a loop over a list.',
+  },
+  {
+    topic: "For Loop",
+    title: "Complete the loop variable name.",
+    template: `names = ["Ali", "Ahmed", "Hassan"]
+for ___ in names:
+    print(x)`,
+    blanks: [{ ph: 'variable', size: 6 }],
+    answers: ['x'],
+    hint: 'The variable used to print inside the loop is x.',
+  },
+  {
+    topic: "For Loop",
+    title: "Print each item in the <code>names</code> list.",
+    template: `names = ["Gorav", "Ali", "Ahmed"]
+for x in names:
+    ___(x)`,
+    blanks: [{ ph: 'function', size: 7 }],
+    answers: ['print'],
+    hint: 'Use the built-in Python function to display output.',
+  },
+  // ── IF / ELSE ──
+  {
+    topic: "If / Else",
+    title: "Complete the condition – print Namaste only for <strong>\"Gorav\"</strong>.",
+    template: `for x in names:
+    if x ___ "Gorav":
+        print("Namaste", x)
+    else:
+        print("Asalam O Alekum", x)`,
+    blanks: [{ ph: 'operator', size: 6 }],
+    answers: ['=='],
+    hint: 'Use the equality comparison operator.',
+  },
+  {
+    topic: "If / Else",
+    title: "What keyword starts the else branch?",
+    template: `for x in names:
+    if x == "Gorav":
+        print("Namaste", x)
+    ___:
+        print("Asalam O Alekum", x)`,
+    blanks: [{ ph: 'keyword', size: 6 }],
+    answers: ['else'],
+    hint: 'This runs when the if condition is False.',
+  },
+  {
+    topic: "If / Else",
+    title: "What is the correct keyword to start a condition?",
+    template: `x = "Ahmed"
+___ x == "Ahmed":
+    print("Hello Ahmed!")`,
+    blanks: [{ ph: 'keyword', size: 4 }],
+    answers: ['if'],
+    hint: 'The keyword that begins a conditional block.',
+  },
+  // ── COMBO ──
+  {
+    topic: "Loop + If",
+    title: "Complete both blanks: loop keyword and comparison operator.",
+    template: `names = ["Ali", "Gorav", "Hassan"]
+___ x in names:
+    if x ___ "Gorav":
+        print("Found Gorav!")`,
+    blanks: [
+      { ph: 'loop kw', size: 5 },
+      { ph: 'operator', size: 5 },
+    ],
+    answers: ['for', '=='],
+    hint: 'First blank: the loop keyword. Second blank: equality check.',
+  },
+  {
+    topic: "append + Loop",
+    title: "Append <strong>\"Hussain\"</strong>, then complete the loop.",
+    template: `names = ["Gorav", "Ali"]
+names.___("Hussain")
+___ x in names:
+    print(x)`,
+    blanks: [
+      { ph: 'method', size: 7 },
+      { ph: 'kw', size: 5 },
+    ],
+    answers: ['append', 'for'],
+    hint: 'First: method to add to end. Second: loop keyword.',
+  },
+  {
+    topic: "List + If",
+    title: "Remove <strong>\"Jim\"</strong> and then check if <strong>\"Karen\"</strong> is still in the list.",
+    template: `Friends = ["Kevin", "Karen", "Jim"]
+Friends.___("Jim")
+if "Karen" ___ Friends:
+    print("Karen is here!")`,
+    blanks: [
+      { ph: 'method', size: 7 },
+      { ph: 'keyword', size: 3 },
+    ],
+    answers: ['remove', 'in'],
+    hint: 'First: method to remove by value. Second: the "in" keyword checks membership.',
+  },
+  {
+    topic: "Full Code",
+    title: "Complete all three blanks in this final snippet.",
+    template: `names = ["Gorav", "Ali", "Ahmed"]
+___ x in names:
+    if x ___ "Gorav":
+        print("Namaste", x)
+    ___:
+        print("Asalam O Alekum", x)`,
+    blanks: [
+      { ph: 'for', size: 5 },
+      { ph: '==', size: 5 },
+      { ph: 'else', size: 6 },
+    ],
+    answers: ['for', '==', 'else'],
+    hint: 'Loop keyword → equality operator → else keyword.',
+  },
+];
+
+// ──────────────────────────────────────────────
+//  STATE
+// ──────────────────────────────────────────────
+let studentName = '';
+let current = 0;
+let score = 0;
+let results = []; // {correct, userAnswers, question}
+
+// ──────────────────────────────────────────────
+//  SCREENS
+// ──────────────────────────────────────────────
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function startQuiz() {
+  const val = document.getElementById('name-input').value.trim();
+  if (!val) { document.getElementById('name-err').style.display = 'block'; return; }
+  studentName = val;
+  current = 0; score = 0; results = [];
+  show('screen-quiz');
+  document.getElementById('q-total').textContent = QUESTIONS.length;
+  renderQuestion();
+}
+
+function retryQuiz() {
+  document.getElementById('name-input').value = '';
+  document.getElementById('name-err').style.display = 'none';
+  show('screen-landing');
+}
+
+// ──────────────────────────────────────────────
+//  RENDER QUESTION
+// ──────────────────────────────────────────────
+function renderQuestion() {
+  const q = QUESTIONS[current];
+  document.getElementById('q-num').textContent = current + 1;
+  document.getElementById('score-live').textContent = score;
+  const pct = (current / QUESTIONS.length) * 100;
+  document.getElementById('progress-bar').style.width = pct + '%';
+
+  // Build code HTML with blank inputs
+  let codeHtml = escapeHtml(q.template);
+  q.blanks.forEach((b, i) => {
+    const inputHtml = `<input class="blank-input" id="blank-${i}" placeholder="${b.ph}" size="${b.size}" autocomplete="off" autocorrect="off" spellcheck="false">`;
+    codeHtml = codeHtml.replace('___', inputHtml);
+  });
+
+  // Syntax colour (simple pass)
+  codeHtml = colourCode(codeHtml);
+
+  const html = `
+    <div class="q-card">
+      <div class="q-label">Q${current+1} · ${q.topic}</div>
+      <div class="q-title">${q.title}</div>
+      <div class="code-block">${codeHtml}</div>
+      <div class="hint-text" id="hint-text">💡 Hint: ${q.hint}</div>
+      <div class="feedback" id="feedback"></div>
+      <div class="q-actions">
+        <button class="btn btn-primary" id="check-btn" onclick="checkAnswer()">✓ Check</button>
+        <button class="btn btn-outline" onclick="showHint()">💡 Hint</button>
+      </div>
+    </div>`;
+
+  document.getElementById('q-container').innerHTML = html;
+
+  // Focus first blank
+  setTimeout(() => {
+    const first = document.getElementById('blank-0');
+    if (first) first.focus();
+  }, 80);
+
+  // Enter key on last blank triggers check
+  q.blanks.forEach((b, i) => {
+    const el = document.getElementById(`blank-${i}`);
+    if (el) el.addEventListener('keydown', e => { if (e.key === 'Enter') checkAnswer(); });
+  });
+}
+
+// ──────────────────────────────────────────────
+//  CHECK
+// ──────────────────────────────────────────────
+function checkAnswer() {
+  const q = QUESTIONS[current];
+  const btn = document.getElementById('check-btn');
+  if (btn.disabled) return;
+
+  let allCorrect = true;
+  const userAnswers = [];
+
+  q.blanks.forEach((b, i) => {
+    const el = document.getElementById(`blank-${i}`);
+    const val = el.value.trim();
+    userAnswers.push(val);
+    const correct = val.toLowerCase() === q.answers[i].toLowerCase().replace(/"/g,'');
+    // Accept with or without quotes for string answers
+    const correctAlt = val === q.answers[i];
+    const ok = correct || correctAlt;
+    el.classList.add(ok ? 'correct' : 'wrong');
+    el.disabled = true;
+    if (!ok) allCorrect = false;
+  });
+
+  if (allCorrect) score++;
+  results.push({ correct: allCorrect, userAnswers, question: q });
+
+  const fb = document.getElementById('feedback');
+  fb.style.display = 'block';
+  if (allCorrect) {
+    fb.className = 'feedback ok';
+    fb.textContent = '✅ Correct! Great job.';
+  } else {
+    fb.className = 'feedback bad';
+    fb.innerHTML = `❌ Not quite. Correct answer(s): <strong>${q.answers.map(a => a.replace(/"/g,'')).join(' , ')}</strong>`;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '✓ Checked';
+
+  setTimeout(() => {
+    current++;
+    if (current < QUESTIONS.length) {
+      renderQuestion();
+    } else {
+      showResult();
+    }
+  }, 1600);
+}
+
+function showHint() {
+  document.getElementById('hint-text').style.display = 'block';
+}
+
+// ──────────────────────────────────────────────
+//  RESULT
+// ──────────────────────────────────────────────
+function showResult() {
+  document.getElementById('progress-bar').style.width = '100%';
+  const pct = Math.round((score / QUESTIONS.length) * 100);
+  document.getElementById('res-name').textContent = studentName;
+  document.getElementById('res-score').innerHTML = `${score}<sub>/${QUESTIONS.length}</sub>`;
+
+  let emoji = '😔', msg = 'Keep practising – review the topics and try again!';
+  if (pct >= 90) { emoji = '🏆'; msg = 'Outstanding! You have mastered the basics!'; }
+  else if (pct >= 70) { emoji = '🎉'; msg = 'Great work! A little more practice and you\'ll be perfect.'; }
+  else if (pct >= 50) { emoji = '👍'; msg = 'Not bad! Review the questions you missed and try again.'; }
+
+  document.getElementById('res-emoji').textContent = emoji;
+  document.getElementById('res-msg').textContent = msg;
+
+  // Breakdown
+  const list = document.getElementById('bk-list');
+  list.innerHTML = results.map((r, i) => `
+    <div class="bk-item">
+      <span class="bk-num">Q${i+1}</span>
+      <span class="bk-icon">${r.correct ? '✅' : '❌'}</span>
+      <span>
+        <strong>${r.question.topic}</strong><br>
+        ${r.correct
+          ? '<span class="bk-correct">Correct</span>'
+          : `<span class="bk-answer">Your: ${r.userAnswers.join(' / ') || '—'} &nbsp;→&nbsp; Correct: ${r.question.answers.map(a=>a.replace(/"/g,'')).join(' / ')}</span>`
+        }
+      </span>
+    </div>`).join('');
+
+  show('screen-result');
+}
+
+// ──────────────────────────────────────────────
+//  HELPERS
+// ──────────────────────────────────────────────
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function colourCode(html) {
+  // keywords
+  const kws = ['for','if','else','elif','in','not','and','or','True','False','None','print','append','insert','remove','def','return','import','from'];
+  kws.forEach(k => {
+    const re = new RegExp(`(?<![a-zA-Z0-9_])(${k})(?![a-zA-Z0-9_])`, 'g');
+    html = html.replace(re, `<span class="kw">$1</span>`);
+  });
+  // strings (simple – double-quoted)
+  html = html.replace(/(&quot;[^&]*?&quot;)/g, '<span class="str">$1</span>');
+  // numbers
+  html = html.replace(/(?<![a-zA-Z_])(\d+\.?\d*)/g, '<span class="num">$1</span>');
+  // comments
+  html = html.replace(/(#.*?)(<br|$)/g, '<span class="cmt">$1</span>$2');
+  return html;
+}
+</script>
+</body>
+</html>
